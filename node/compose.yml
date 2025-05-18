@@ -1,0 +1,19 @@
+services:
+  node-dev:
+    image: ghcr.io/igoresso/node-dev:latest
+    user: "${UID}:${GID}"
+    init: true
+    restart: on-failure
+    working_dir: /workspace
+    ports:
+      - '3000:3000'   # Next.js
+      - '5173:5173'   # Vite/SvelteKit
+      - '8080:8080'   # fallback
+      - '24678:24678' # HMR websocket
+    volumes:
+      - ./:/workspace
+      - node_modules:/workspace/node_modules
+      - pnpm-store:/home/node/.pnpm-store
+volumes:
+  node_modules:
+  pnpm-store:

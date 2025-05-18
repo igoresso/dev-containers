@@ -1,0 +1,40 @@
+name: Publish Node Dev Container
+
+on:
+  push:
+    paths:
+      - 'node/Containerfile'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./node
+          file: ./node/Containerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/node-dev:latest
+            ghcr.io/${{ github.repository_owner }}/node-dev:${{ github.sha }}
+
+      - name: Verify published image
+        run: |
+          echo "Image pushed:"
+          echo "  ghcr.io/${{ github.repository_owner }}/node-dev:latest"
+          echo "  ghcr.io/${{ github.repository_owner }}/node-dev:${{ github.sha }}"

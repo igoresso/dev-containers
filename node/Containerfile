@@ -1,19 +1,22 @@
-FROM node:alpine
+FROM node:lts-alpine
 
-# Install dependencies
+LABEL maintainer="Igor Tyshchenko <33253240+igoresso@users.noreply.github.com>" \
+      org.opencontainers.image.title="Node.js Dev Container" \
+      org.opencontainers.image.description="Development environment for Node.js" \
+      org.opencontainers.image.source="https://github.com/igoresso/dev-containers/tree/master/node" \
+      org.opencontainers.image.licenses="MIT"
+
 RUN apk add --no-cache tini \
     && corepack enable \
     && corepack prepare pnpm@latest --activate
 
-# Switch to the built‑in non‑root `node` user (UID/GID 1000)
-USER node
-WORKDIR /workspace
-
-# Development environment variables
-ENV HOST=0.0.0.0 \
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     NODE_ENV=development \
+    HOST=0.0.0.0 \
     CHOKIDAR_USEPOLLING=true \
-    PNPM_STORE_PATH=/home/node/.pnpm-store
+    PNPM_STORE_PATH=/workspace.pnpm-store
+
+WORKDIR /workspace
 
 # Expose common development ports
 # - 3000: Next.js default
@@ -26,4 +29,4 @@ EXPOSE 3000 5173 8080 24678
 ENTRYPOINT ["/sbin/tini", "-s", "--"]
 
 # Default command
-CMD ["sh", "-c", "pnpm install && pnpm dev --host 0.0.0.0"]
+CMD ["sh", "-c", "pnpm install && pnpm dev --host $HOST"]

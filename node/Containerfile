@@ -8,15 +8,26 @@ LABEL maintainer="Igor Tyshchenko <33253240+igoresso@users.noreply.github.com>" 
 
 RUN apk add --no-cache tini \
     && corepack enable \
-    && corepack prepare pnpm@latest --activate
+    && corepack prepare pnpm@latest --activate \
+    && mkdir -p /home/node/.pnpm-store \
+    && chown -R node:node /home/node/.pnpm-store \
+    && mkdir -p /home/node/workspace \
+    && chown -R node:node /home/node/workspace \
+    && mkdir -p /home/node/workspace/node_modules \
+    && chown -R node:node /home/node/workspace/node_modules
 
-ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
-    NODE_ENV=development \
-    HOST=0.0.0.0 \
+# Switch to the "node" user (UID 1000/GID 1000)
+USER node
+
+RUN pnpm config --global set store-dir /home/node/.pnpm-store
+
+WORKDIR /home/node/workspace
+
+ENV COREPACK_ENABLE_AUTO_PIN=0 \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     CHOKIDAR_USEPOLLING=true \
-    PNPM_STORE_PATH=/workspace.pnpm-store
-
-WORKDIR /workspace
+    WATCHPACK_POLLING=true \
+    FAST_REFRESH=true
 
 # Expose common development ports
 # - 3000: Next.js default
@@ -29,4 +40,4 @@ EXPOSE 3000 5173 8080 24678
 ENTRYPOINT ["/sbin/tini", "-s", "--"]
 
 # Default command
-CMD ["sh", "-c", "pnpm install && pnpm dev --host $HOST"]
+CMD ["sh"]

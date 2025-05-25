@@ -1,20 +1,27 @@
 services:
   node-dev:
     image: ghcr.io/igoresso/node-dev:latest
-    user: "${UID:-1000}:${GID:-1000}"
     init: true
-    restart: unless-stopped
-    working_dir: /workspace
+    userns_mode: "keep-id"
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /home/node/workspace
     volumes:
-      - ./:/workspace
-      - node_modules:/workspace/node_modules
-      - pnpm-store:/workspace/.pnpm-store
+      - ./:/home/node/workspace
+      - node_modules:/home/node/workspace/node_modules
+      - ./.pnpm-store:/home/node/.pnpm-store
+    environment:
+      - HOST=0.0.0.0
+      - NODE_ENV=development
     ports:
       - '3000:3000'   # Next.js
       - '5173:5173'   # Vite/SvelteKit
       - '8080:8080'   # fallback
       - '24678:24678' # HMR websocket
+    restart: unless-stopped
     tty: true
+    stdin_open: true
+    command: sh -c "pnpm install && pnpm dev --host ${HOST}"
 volumes:
   node_modules:
   pnpm-store:
+  
